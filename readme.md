@@ -32,7 +32,7 @@ Modify the following parameters:
 To run the playbook on your server and install Docker and GitLab Runner, use the following command:
 
 ```bash
-ansible-playbook -i production site.yml
+ansible-playbook -i inventory/production playbook.yml
 ```
 
 This will install Docker and GitLab Runner on the servers defined in the production inventory.
