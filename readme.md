@@ -1,4 +1,3 @@
-```markdown
 # GitLab Runner and Docker Installation Playbook
 
 This playbook installs Docker and GitLab Runner on your servers.
@@ -94,6 +93,3 @@ This configuration runs the playbook on Ubuntu 20.04 and 22.04.
 ## Conclusion
 
 Follow the steps above to configure the inventory, run the playbook, and test it using Molecule with Vagrant. If you encounter any issues, ensure that all the necessary dependencies and plugins are installed and the configurations are correct.
-```
-
-This version includes the installation of the Molecule Vagrant plugin and explains how to run Molecule tests with it.
