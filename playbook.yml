@@ -1,0 +1,10 @@
+---
+- name: Test new role from within this playbook
+  gather_facts: false
+  become: true
+  become_user: root
+  tasks:
+    - name: Testing role
+      ansible.builtin.include_role:
+        name: gitlab_runner_docker
+        tasks_from: main.yml

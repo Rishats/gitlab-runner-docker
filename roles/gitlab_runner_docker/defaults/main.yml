@@ -1,0 +1,3 @@
+---
+gitlab_runner_gpg_url: "https://packages.gitlab.com/gitlab/gitlab-runner/gpgkey"
+gitlab_runner_repo_url: "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/config_file.list?os=ubuntu&dist={{ ansible_distribution_release }}"

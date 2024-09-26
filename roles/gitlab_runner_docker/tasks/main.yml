@@ -1,0 +1,148 @@
+---
+- name: Set architecture variable to amd64 if x86_64 is detected
+  set_fact:
+    my_architecture: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+
+- name: Print the architecture being used
+  ansible.builtin.debug:
+    msg: "Architecture for Docker: {{ my_architecture }}"
+
+# Update the APT cache
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+# Install required packages
+- name: Install required packages
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - lsb-release
+      - gnupg
+    state: present
+
+# Conditionally install dpkg-sig only for Ubuntu 22.04
+- name: Ensure dpkg-sig is installed for Ubuntu 22.04
+  apt:
+    name: dpkg-sig
+    state: present
+  when: ansible_distribution_release == 'jammy'
+
+# Create directory for apt keyrings
+- name: Create directory for apt keyrings
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+# Download Docker's official GPG key in .asc format
+- name: Download Docker's official GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+# Set variable for choosing the correct Ubuntu release version
+- name: Set docker_apt_release variable
+  set_fact:
+    docker_apt_release: >-
+      {% if ansible_distribution_release in ['lunar', 'mantic'] %}
+        jammy
+      {% else %}
+        {{ ansible_distribution_release }}
+      {% endif %}
+
+# Add Docker repository to apt sources
+- name: Add Docker repository to apt sources
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ my_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ docker_apt_release }} stable"
+    state: present
+    filename: docker.list
+
+# Update the APT cache after adding the Docker repository
+- name: Update apt cache after adding Docker repository
+  apt:
+    update_cache: yes
+
+# Install Docker
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+# Ensure Docker service is running
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+
+# Download GitLab Runner repository setup script
+- name: Download GitLab Runner repository setup script
+  ansible.builtin.get_url:
+    url: "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh"
+    dest: "/tmp/gitlab_runner_setup.sh"
+    mode: '0755'
+
+# Ensure GitLab Runner repository is set up
+- name: Check if GitLab Runner repository is already set up
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/gitlab_runner.list
+  register: gitlab_repo_file
+
+# Run GitLab Runner repository setup script only if the repository is not set up
+- name: Run GitLab Runner repository setup script
+  ansible.builtin.command: "bash /tmp/gitlab_runner_setup.sh"
+  when: gitlab_repo_file.stat.exists == false
+  register: gitlab_repo_setup
+
+
+# Ensure the GitLab Runner repository is added
+- name: Ensure GitLab Runner repository is added
+  ansible.builtin.apt_repository:
+    repo: "deb https://packages.gitlab.com/runner/gitlab-runner/ubuntu/ {{ ansible_distribution_release }} main"
+    state: present
+  when: gitlab_repo_setup is succeeded
+
+# Update apt cache
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+# Install the latest version of GitLab Runner
+- name: Install GitLab Runner
+  apt:
+    name: gitlab-runner
+    state: present
+
+# Ensure GitLab Runner service is started and enabled
+- name: Ensure GitLab Runner service is running
+  service:
+    name: gitlab-runner
+    state: started
+    enabled: yes
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  tags: apt-update
+
+- name: Install GitLab Runner
+  apt:
+    name: gitlab-runner
+    state: present
+  tags: install
+
+- name: Ensure GitLab Runner service is running
+  service:
+    name: gitlab-runner
+    state: started
+    enabled: yes
+  tags: service

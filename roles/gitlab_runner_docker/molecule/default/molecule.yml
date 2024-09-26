@@ -1,0 +1,42 @@
+---
+dependency:
+  name: galaxy
+  options:
+    role_name: gitlab_runner_docker  # Укажите имя вашей роли
+    ignore-certs: true
+
+driver:
+  name: vagrant
+
+platforms:
+  - name: ubuntu24
+    box: bento/ubuntu-24.04
+    memory: 2048
+    cpus: 2
+    interfaces:
+      - network_name: private_network
+        type: static
+        ip: 192.168.56.24  # IP for the Ubuntu 24.04 VM
+        port: 2222
+
+  - name: ubuntu22
+    box: bento/ubuntu-22.04
+    memory: 2048
+    cpus: 2
+    interfaces:
+      - network_name: private_network
+        type: static
+        ip: 192.168.56.22  # IP for the Ubuntu 22.04 VM
+        port: 2222
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      roles_path: "../../"
+  lint: |
+    yamllint .
+    ansible-lint
+
+verifier:
+  name: ansible

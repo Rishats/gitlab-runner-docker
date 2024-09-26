@@ -1,0 +1,41 @@
+---
+- name: Check Docker and GitLab Runner installation
+  hosts: all
+  tasks:
+    - name: Check that Docker is installed
+      command: docker --version
+      register: docker_version_output
+      changed_when: false
+
+    - name: Ensure the docker command was executed successfully
+      assert:
+        that:
+          - docker_version_output.rc == 0
+
+    - name: Check that the Docker service is running
+      service_facts:
+
+    - name: Ensure the Docker service is running
+      assert:
+        that:
+          - "'docker' in services"
+          - "services['docker'].state == 'running'"
+
+    - name: Check that GitLab Runner is installed
+      command: gitlab-runner --version
+      register: gitlab_runner_version_output
+      changed_when: false 
+
+    - name: Ensure the gitlab-runner command was executed successfully
+      assert:
+        that:
+          - gitlab_runner_version_output.rc == 0
+
+    - name: Check that the GitLab Runner service is running
+      service_facts:
+
+    - name: Ensure the GitLab Runner service is running
+      assert:
+        that:
+          - "'gitlab-runner' in services"
+          - "services['gitlab-runner'].state == 'running'"

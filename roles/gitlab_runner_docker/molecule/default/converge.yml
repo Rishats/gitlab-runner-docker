@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: "Include gitlab_runner_docker role"
+      include_role:
+        name: "gitlab_runner_docker"
